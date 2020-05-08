@@ -1,2 +1,3 @@
-# VLDraw
-LDraw VR player
+# VLD
+
+VR capable LDraw viewer.
