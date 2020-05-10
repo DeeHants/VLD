@@ -177,6 +177,20 @@ public class LDrawPart : MonoBehaviour {
         Quaternion rotation = rotationMatrix.rotation;
         Vector3 scale = rotationMatrix.lossyScale;
 
+        // FIXME Hack for negative scaling that Unity gets wrong. Look for simple scaling and create the vector and reset the rotation
+        if (
+            rotationMatrix.m01 == 0 && rotationMatrix.m02 == 0 &&
+            rotationMatrix.m10 == 0 && rotationMatrix.m12 == 0 &&
+            rotationMatrix.m20 == 0 && rotationMatrix.m21 == 0
+        ) {
+            Vector3 correctScale = new Vector3 (rotationMatrix.m00, rotationMatrix.m11, rotationMatrix.m22);
+            if (scale != correctScale) {
+                Debug.LogFormat ("Incorrectly interpreted matrix: Should be {0} but got {1}.\n{2}", correctScale, scale, rotationMatrix.ToString ());
+                rotation = Quaternion.identity;
+                scale = correctScale;
+            }
+        }
+
         // Create the sub object
         GameObject newObject = Instantiate (this.self, position, rotation, this.transform);
         newObject.name = string.Join (" ", tokens);
