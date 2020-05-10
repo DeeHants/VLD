@@ -166,30 +166,10 @@ public class LDrawPart : MonoBehaviour {
         }
 
         // Convert the matrix into Unity objects
-        Matrix4x4 rotationMatrix = new Matrix4x4 (
-            new Vector4 (float.Parse (matrixTokens[0]), float.Parse (matrixTokens[3]), float.Parse (matrixTokens[6]), 0),
-            new Vector4 (float.Parse (matrixTokens[1]), float.Parse (matrixTokens[4]), float.Parse (matrixTokens[7]), 0),
-            new Vector4 (float.Parse (matrixTokens[2]), float.Parse (matrixTokens[5]), float.Parse (matrixTokens[8]), 0),
-            new Vector4 (float.Parse (positionTokens[0]), float.Parse (positionTokens[1]), float.Parse (positionTokens[2]), 1)
-        );
-
-        Vector3 position = new Vector3 (rotationMatrix.m03, -rotationMatrix.m13, rotationMatrix.m23);
-        Quaternion rotation = rotationMatrix.rotation;
-        Vector3 scale = rotationMatrix.lossyScale;
-
-        // FIXME Hack for negative scaling that Unity gets wrong. Look for simple scaling and create the vector and reset the rotation
-        if (
-            rotationMatrix.m01 == 0 && rotationMatrix.m02 == 0 &&
-            rotationMatrix.m10 == 0 && rotationMatrix.m12 == 0 &&
-            rotationMatrix.m20 == 0 && rotationMatrix.m21 == 0
-        ) {
-            Vector3 correctScale = new Vector3 (rotationMatrix.m00, rotationMatrix.m11, rotationMatrix.m22);
-            if (scale != correctScale) {
-                Debug.LogFormat ("Incorrectly interpreted matrix: Should be {0} but got {1}.\n{2}", correctScale, scale, rotationMatrix.ToString ());
-                rotation = Quaternion.identity;
-                scale = correctScale;
-            }
-        }
+        Vector3 position;
+        Quaternion rotation;
+        Vector3 scale;
+        this.CreateTransformData (positionTokens, matrixTokens, out position, out rotation, out scale);
 
         // Create the sub object
         GameObject newObject = Instantiate (this.self, position, rotation, this.transform);
@@ -308,6 +288,38 @@ public class LDrawPart : MonoBehaviour {
 
         // LDraw uses a right-handed co-ordinate system where -Y is "up".
         return new Vector3 (x, -y, z);
+    }
+
+    private void CreateTransformData (string[] pointTokens, string[] matrixTokens, out Vector3 position, out Quaternion rotation, out Vector3 scale) {
+        if (pointTokens.Length != 3) { throw new ArgumentException ("Invalid point token array", "pointTokens"); }
+        if (matrixTokens.Length != 9) { throw new ArgumentException ("Invalid matrix token array", "matrixTokens"); }
+
+        // Convert the matrix into Unity objects
+        Matrix4x4 rotationMatrix = new Matrix4x4 (
+            new Vector4 (float.Parse (matrixTokens[0]), float.Parse (matrixTokens[3]), float.Parse (matrixTokens[6]), 0),
+            new Vector4 (float.Parse (matrixTokens[1]), float.Parse (matrixTokens[4]), float.Parse (matrixTokens[7]), 0),
+            new Vector4 (float.Parse (matrixTokens[2]), float.Parse (matrixTokens[5]), float.Parse (matrixTokens[8]), 0),
+            new Vector4 (float.Parse (pointTokens[0]), float.Parse (pointTokens[1]), float.Parse (pointTokens[2]), 1)
+        );
+
+        // LDraw uses a right-handed co-ordinate system where -Y is "up".
+        position = new Vector3 (rotationMatrix.m03, -rotationMatrix.m13, rotationMatrix.m23);
+        rotation = rotationMatrix.rotation;
+        scale = rotationMatrix.lossyScale;
+
+        // FIXME Hack for negative scaling that Unity gets wrong. Look for simple scaling and create the vector and reset the rotation
+        if (
+            rotationMatrix.m01 == 0 && rotationMatrix.m02 == 0 &&
+            rotationMatrix.m10 == 0 && rotationMatrix.m12 == 0 &&
+            rotationMatrix.m20 == 0 && rotationMatrix.m21 == 0
+        ) {
+            Vector3 correctScale = new Vector3 (rotationMatrix.m00, rotationMatrix.m11, rotationMatrix.m22);
+            if (scale != correctScale) {
+                Debug.LogFormat ("Incorrectly interpreted matrix: Should be {0} but got {1}.\n{2}", correctScale, scale, rotationMatrix.ToString ());
+                rotation = Quaternion.identity;
+                scale = correctScale;
+            }
+        }
     }
 
     private string ResolvePartPath (string currentPart, string subPart) {
