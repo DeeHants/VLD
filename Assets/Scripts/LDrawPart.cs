@@ -142,6 +142,7 @@ public class LDrawPart : MonoBehaviour {
         }
     }
 
+    #region Line type helpers
     private void ProcessComment (string content) {
         // Create an empty object for the string
         GameObject newObject = new GameObject ("// " + content);
@@ -278,7 +279,9 @@ public class LDrawPart : MonoBehaviour {
         GameObject newObject = new GameObject (string.Join (" ", tokens));
         newObject.transform.SetParent (this.transform);
     }
+    #endregion Line type helpers
 
+    #region Matrix conversion
     private Vector3 CreateVertex (string[] pointTokens) {
         if (pointTokens.Length != 3) { throw new ArgumentException ("Invalid point token array", "pointTokens"); }
 
@@ -321,7 +324,9 @@ public class LDrawPart : MonoBehaviour {
             }
         }
     }
+    #endregion Matrix conversion
 
+    #region LDraw library functions
     private string ResolvePartPath (string currentPart, string subPart) {
         string ldrawPath = @"C:\Users\dee\Documents\Unity\VLDraw\ldraw\";
         string path;
@@ -346,4 +351,5 @@ public class LDrawPart : MonoBehaviour {
 
         return string.Empty;
     }
+    #endregion LDraw library functions
 }
