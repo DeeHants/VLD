@@ -52,7 +52,7 @@ public class LDrawPart : MonoBehaviour {
 
                 case '1': // Sub-file reference
                     {
-                        string[] tokens = line.Split (delimeters, 15);
+                        string[] tokens = line.Split (delimeters, 15, StringSplitOptions.RemoveEmptyEntries);
                         if (tokens.Length != 15) { break; } // Not enough tokens
                         this.ProcessSubFile (tokens);
                         continue;
@@ -60,7 +60,7 @@ public class LDrawPart : MonoBehaviour {
 
                 case '2': // Line
                     {
-                        string[] tokens = line.Split (delimeters);
+                        string[] tokens = line.Split (delimeters, StringSplitOptions.RemoveEmptyEntries);
                         if (tokens.Length != 8) { break; } // Not the right amount of tokens
                         this.ProcessLinePrimitive (type, tokens);
                         continue;
@@ -68,7 +68,7 @@ public class LDrawPart : MonoBehaviour {
 
                 case '3': // Triangle
                     {
-                        string[] tokens = line.Split (delimeters);
+                        string[] tokens = line.Split (delimeters, StringSplitOptions.RemoveEmptyEntries);
                         if (tokens.Length != 11) { break; } // Not the right amount of tokens
                         this.ProcessTrianglePrimitive (tokens);
                         continue;
@@ -76,7 +76,7 @@ public class LDrawPart : MonoBehaviour {
 
                 case '4': // Quadrilateral
                     {
-                        string[] tokens = line.Split (delimeters);
+                        string[] tokens = line.Split (delimeters, StringSplitOptions.RemoveEmptyEntries);
                         if (tokens.Length != 14) { break; } // Not the right amount of tokens
                         this.ProcessQuadPrimitive (tokens);
                         continue;
@@ -84,7 +84,7 @@ public class LDrawPart : MonoBehaviour {
 
                 case '5': // Optional Line
                     {
-                        string[] tokens = line.Split (delimeters);
+                        string[] tokens = line.Split (delimeters, StringSplitOptions.RemoveEmptyEntries);
                         if (tokens.Length != 14) { break; } // Not the right amount of tokens
                         this.ProcessLinePrimitive (type, tokens);
                         continue;
