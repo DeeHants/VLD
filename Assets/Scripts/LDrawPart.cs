@@ -9,6 +9,8 @@ public class LDrawPart : MonoBehaviour {
     // Public properties
     public string filename = string.Empty;
 
+    public int defaultColour = 16;
+
     public GameObject self = null;
 
     // Mesh fields
@@ -123,6 +125,14 @@ public class LDrawPart : MonoBehaviour {
                 }
             }
             // mesh.RecalculateNormals();
+
+            // Re-map the default colour
+            if (this.defaultColour != 16) {
+                MeshRenderer renderer = this.GetComponent<MeshRenderer> ();
+                Material[] materials = renderer.materials;
+                materials[16] = materials[this.defaultColour];
+                renderer.materials = materials;
+            }
         }
     }
 
@@ -169,17 +179,8 @@ public class LDrawPart : MonoBehaviour {
 
         // Set the part colour
         int partColour = int.Parse (color);
-        if (partColour == 16) {
-            // Get from parent name
-            MeshRenderer thisRenderer = this.GetComponent<MeshRenderer> ();
-            Material defaultMaterial = thisRenderer.materials[16];
-            string[] nameParts = defaultMaterial.name.Split (' ');
-            partColour = int.Parse (nameParts[0]);
-        }
-        MeshRenderer renderer = newObject.GetComponent<MeshRenderer> ();
-        Material[] materials = renderer.materials;
-        materials[16] = materials[partColour];
-        renderer.materials = materials;
+        if (partColour == 16) { partColour = this.defaultColour; }
+        newObject.GetComponent<LDrawPart> ().defaultColour = partColour;
     }
 
     private void ProcessLinePrimitive (char type, string[] tokens) {
