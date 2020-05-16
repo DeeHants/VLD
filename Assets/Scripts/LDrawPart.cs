@@ -13,11 +13,8 @@ public class LDrawPart : MonoBehaviour {
 
     // Mesh fields
     private List<Vector3> meshVertices = new List<Vector3> ();
-    private List<int> meshTriangles = new List<int> ();
-
-    // Line mesh fields
-    private List<Vector3> lineVertices = new List<Vector3> ();
-    private List<int> lineSegments = new List<int> ();
+    private List<int>[] meshTriangles = new List<int>[50];
+    private List<int>[] meshLines = new List<int>[50];
 
     // Start is called before the first frame update
     void Start () {
@@ -100,7 +97,7 @@ public class LDrawPart : MonoBehaviour {
         }
 
         // Do we need to create a mesh
-        if (meshVertices.Count > 0 || meshTriangles.Count > 0) {
+        if (meshVertices.Count > 0) {
             // Create a mesh filter
             MeshFilter filter = this.GetComponent<MeshFilter> ();
             if (filter == null) {
@@ -110,35 +107,22 @@ public class LDrawPart : MonoBehaviour {
             // And the mesh
             Mesh mesh = new Mesh ();
             filter.mesh = mesh;
+            mesh.subMeshCount = 50;
             mesh.vertices = this.meshVertices.ToArray ();
-            mesh.triangles = this.meshTriangles.ToArray ();
+
+            // And each colour's triangles and lines
+            for (int colourIndex = 0; colourIndex < 50; colourIndex++) {
+                List<int> triangles = this.meshTriangles[colourIndex];
+                if (triangles != null && triangles.Count > 0) {
+                    mesh.SetTriangles (triangles.ToArray (), colourIndex);
+                }
+
+                List<int> lines = this.meshLines[colourIndex];
+                if (lines != null && lines.Count > 0) {
+                    mesh.SetIndices (lines.ToArray (), MeshTopology.Lines, colourIndex);
+                }
+            }
             // mesh.RecalculateNormals();
-        }
-
-        // What about a line mesh?
-        if (this.lineVertices.Count > 0 || this.lineSegments.Count > 0) {
-            GameObject newObject = new GameObject ("Lines");
-            newObject.transform.SetParent (this.transform);
-            newObject.transform.localPosition = Vector3.zero;
-            newObject.transform.localScale = Vector3.zero;
-            newObject.transform.localRotation = Quaternion.identity;
-
-            // Create a mesh filter
-            MeshFilter filter = newObject.GetComponent<MeshFilter> ();
-            if (filter == null) {
-                filter = newObject.gameObject.AddComponent<MeshFilter> ();
-            }
-            MeshRenderer renderer = newObject.GetComponent<MeshRenderer> ();
-            if (renderer == null) {
-                renderer = newObject.gameObject.AddComponent<MeshRenderer> ();
-            }
-            renderer.material = this.GetComponent<MeshRenderer> ().material;
-
-            // And the mesh
-            Mesh mesh = new Mesh ();
-            filter.mesh = mesh;
-            mesh.vertices = this.lineVertices.ToArray ();
-            mesh.SetIndices (this.lineSegments.ToArray (), MeshTopology.Lines, 0);
         }
     }
 
@@ -182,6 +166,20 @@ public class LDrawPart : MonoBehaviour {
         // Add the part data
         newObject.GetComponent<LDrawPart> ().self = this.self;
         newObject.GetComponent<LDrawPart> ().filename = path;
+
+        // Set the part colour
+        int partColour = int.Parse (color);
+        if (partColour == 16) {
+            // Get from parent name
+            MeshRenderer thisRenderer = this.GetComponent<MeshRenderer> ();
+            Material defaultMaterial = thisRenderer.materials[16];
+            string[] nameParts = defaultMaterial.name.Split (' ');
+            partColour = int.Parse (nameParts[0]);
+        }
+        MeshRenderer renderer = newObject.GetComponent<MeshRenderer> ();
+        Material[] materials = renderer.materials;
+        materials[16] = materials[partColour];
+        renderer.materials = materials;
     }
 
     private void ProcessLinePrimitive (char type, string[] tokens) {
@@ -192,12 +190,17 @@ public class LDrawPart : MonoBehaviour {
         Array.Copy (tokens, 5, pointTokens[1], 0, 3);
 
         // Update the mesh
-        int startIndex = this.lineVertices.Count;
-        this.lineVertices.Add (this.CreateVertex (pointTokens[0]));
-        this.lineVertices.Add (this.CreateVertex (pointTokens[1]));
+        int startIndex = this.meshVertices.Count;
+        this.meshVertices.Add (this.CreateVertex (pointTokens[0]));
+        this.meshVertices.Add (this.CreateVertex (pointTokens[1]));
 
-        this.lineSegments.Add (startIndex);
-        this.lineSegments.Add (startIndex + 1);
+        List<int> lines = this.meshLines[int.Parse (color)];
+        if (lines == null) {
+            lines = this.meshLines[int.Parse (color)] = new List<int> ();
+        }
+
+        lines.Add (startIndex);
+        lines.Add (startIndex + 1);
 
         // Create the sub object
         GameObject newObject = new GameObject (string.Join (" ", tokens));
@@ -218,19 +221,24 @@ public class LDrawPart : MonoBehaviour {
         this.meshVertices.Add (this.CreateVertex (pointTokens[1]));
         this.meshVertices.Add (this.CreateVertex (pointTokens[2]));
 
+        List<int> triangles = this.meshTriangles[int.Parse (color)];
+        if (triangles == null) {
+            triangles = this.meshTriangles[int.Parse (color)] = new List<int> ();
+        }
+
         // CW
         // 0 1
         //   2
-        this.meshTriangles.Add (startIndex);
-        this.meshTriangles.Add (startIndex + 1);
-        this.meshTriangles.Add (startIndex + 2);
+        triangles.Add (startIndex);
+        triangles.Add (startIndex + 1);
+        triangles.Add (startIndex + 2);
 
         // CCW
         // 0  
         // 1 2
-        this.meshTriangles.Add (startIndex);
-        this.meshTriangles.Add (startIndex + 2);
-        this.meshTriangles.Add (startIndex + 1);
+        triangles.Add (startIndex);
+        triangles.Add (startIndex + 2);
+        triangles.Add (startIndex + 1);
 
         // Create the sub object
         GameObject newObject = new GameObject (string.Join (" ", tokens));
@@ -253,27 +261,32 @@ public class LDrawPart : MonoBehaviour {
         this.meshVertices.Add (this.CreateVertex (pointTokens[2]));
         this.meshVertices.Add (this.CreateVertex (pointTokens[3]));
 
+        List<int> triangles = this.meshTriangles[int.Parse (color)];
+        if (triangles == null) {
+            triangles = this.meshTriangles[int.Parse (color)] = new List<int> ();
+        }
+
         // CW
         // 0 1
         // 3 2
-        this.meshTriangles.Add (startIndex);
-        this.meshTriangles.Add (startIndex + 1);
-        this.meshTriangles.Add (startIndex + 2);
+        triangles.Add (startIndex);
+        triangles.Add (startIndex + 1);
+        triangles.Add (startIndex + 2);
 
-        this.meshTriangles.Add (startIndex);
-        this.meshTriangles.Add (startIndex + 2);
-        this.meshTriangles.Add (startIndex + 3);
+        triangles.Add (startIndex);
+        triangles.Add (startIndex + 2);
+        triangles.Add (startIndex + 3);
 
         // CCW
         // 0 3
         // 1 2
-        this.meshTriangles.Add (startIndex);
-        this.meshTriangles.Add (startIndex + 3);
-        this.meshTriangles.Add (startIndex + 2);
+        triangles.Add (startIndex);
+        triangles.Add (startIndex + 3);
+        triangles.Add (startIndex + 2);
 
-        this.meshTriangles.Add (startIndex);
-        this.meshTriangles.Add (startIndex + 2);
-        this.meshTriangles.Add (startIndex + 1);
+        triangles.Add (startIndex);
+        triangles.Add (startIndex + 2);
+        triangles.Add (startIndex + 1);
 
         // Create the sub object
         GameObject newObject = new GameObject (string.Join (" ", tokens));
