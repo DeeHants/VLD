@@ -6,6 +6,8 @@ using UnityEngine;
 [RequireComponent (typeof (MeshFilter))]
 [RequireComponent (typeof (MeshRenderer))]
 public class LDrawPart : MonoBehaviour {
+    private const int ColourCount = 50; // Must cover the range of all colours available
+
     // Public properties
     public string filename = string.Empty;
 
@@ -15,8 +17,8 @@ public class LDrawPart : MonoBehaviour {
 
     // Mesh fields
     private List<Vector3> meshVertices = new List<Vector3> ();
-    private List<int>[] meshTriangles = new List<int>[50];
-    private List<int>[] meshLines = new List<int>[50];
+    private List<int>[] meshTriangles = new List<int>[ColourCount];
+    private List<int>[] meshLines = new List<int>[ColourCount];
 
     // Start is called before the first frame update
     void Start () {
@@ -100,41 +102,108 @@ public class LDrawPart : MonoBehaviour {
 
         // Do we need to create a mesh
         if (meshVertices.Count > 0) {
-            // Create a mesh filter
-            MeshFilter filter = this.GetComponent<MeshFilter> ();
-            if (filter == null) {
-                filter = this.gameObject.AddComponent<MeshFilter> ();
-            }
-
-            // And the mesh
-            Mesh mesh = new Mesh ();
-            filter.mesh = mesh;
-            mesh.subMeshCount = 50;
-            mesh.vertices = this.meshVertices.ToArray ();
-
-            // And each colour's triangles and lines
-            for (int colourIndex = 0; colourIndex < 50; colourIndex++) {
-                List<int> triangles = this.meshTriangles[colourIndex];
-                if (triangles != null && triangles.Count > 0) {
-                    mesh.SetTriangles (triangles.ToArray (), colourIndex);
-                }
-
-                List<int> lines = this.meshLines[colourIndex];
-                if (lines != null && lines.Count > 0) {
-                    mesh.SetIndices (lines.ToArray (), MeshTopology.Lines, colourIndex);
-                }
-            }
-            // mesh.RecalculateNormals();
-
-            // Re-map the default colour
-            if (this.defaultColour != 16) {
-                MeshRenderer renderer = this.GetComponent<MeshRenderer> ();
-                Material[] materials = renderer.materials;
-                materials[16] = materials[this.defaultColour];
-                renderer.materials = materials;
-            }
+            this.processMesh ();
         }
     }
+
+    #region Mesh processing
+    private void processMesh () {
+        // Do we need to create a mesh?
+        if (meshVertices.Count == 0) { return; }
+
+        // Determine how many submeshes and materials we need
+        int materialCount = 0;
+        for (int colourIndex = 0; colourIndex < ColourCount; colourIndex++) {
+            if (
+                this.meshTriangles[colourIndex] != null ||
+                this.meshLines[colourIndex] != null ||
+                colourIndex == 16 || colourIndex == 24 // Always create entries for 16 and 24
+            ) {
+                materialCount++;
+            }
+        }
+
+        // Get/Create a mesh filter and renderer
+        MeshFilter filter = this.GetComponent<MeshFilter> ();
+        if (filter == null) {
+            filter = this.gameObject.AddComponent<MeshFilter> ();
+        }
+        MeshRenderer renderer = this.GetComponent<MeshRenderer> ();
+        if (renderer == null) {
+            renderer = this.gameObject.AddComponent<MeshRenderer> ();
+        }
+
+        // And the mesh itself
+        Mesh mesh = new Mesh ();
+        filter.mesh = mesh;
+        mesh.subMeshCount = materialCount;
+        Material[] materials = new Material[materialCount];
+        int meshIndex = 0;
+
+        // Set all the vertices
+        mesh.vertices = this.meshVertices.ToArray ();
+
+        // Add the inherited colours (16 and 24) first
+        this.AddColourMesh (meshIndex++, mesh, ref materials, 16);
+        this.AddColourMesh (meshIndex++, mesh, ref materials, 24);
+
+        // And each other colour's triangles and lines
+        int maxColourIndex = Math.Max (this.meshTriangles.Length, this.meshLines.Length);
+        for (int colourIndex = 0; colourIndex < maxColourIndex; colourIndex++) {
+            if (colourIndex == 16 || colourIndex == 24) { continue; }
+            this.AddColourMesh (meshIndex++, mesh, ref materials, colourIndex);
+        }
+
+        // Set the materials on the renderer
+        renderer.materials = materials;
+    }
+
+    private void AddColourMesh (int index, Mesh mesh, ref Material[] materials, int colourIndex) {
+        bool addMaterial = false;
+
+        // And each colour's triangles and lines
+        if (colourIndex < this.meshTriangles.Length) {
+            List<int> triangles = this.meshTriangles[colourIndex];
+            if (triangles != null && triangles.Count > 0) {
+                mesh.SetTriangles (triangles.ToArray (), index);
+                addMaterial = true;
+            }
+        }
+
+        if (colourIndex < this.meshLines.Length) {
+            List<int> lines = this.meshLines[colourIndex];
+            if (lines != null && lines.Count > 0) {
+                mesh.SetIndices (lines.ToArray (), MeshTopology.Lines, index);
+                addMaterial = true;
+            }
+        }
+
+        if (addMaterial) {
+            // FIXME Look these up by name?
+            string[] materialIds = new string[ColourCount];
+            materialIds[0] = "509779034e0b8294b83e26e528eba4d2";
+            materialIds[1] = "f5d58533b3c270f4a8196d6edb036ceb";
+            materialIds[2] = "7f0e7f6d5e1eb3943b341eeca971fa6c";
+            materialIds[3] = "42c59cb6b1d2bca4a9b9df87553d636d";
+            materialIds[4] = "d7f9a43fd026900478232a532028a206";
+            materialIds[7] = "196af0c0dd986974582a57b11d8f993c";
+            materialIds[36] = "4b19ef2d2cb1e29449226048ef694308";
+            materialIds[39] = "3b6eac4755aa0ce4e8501cecab0d6688";
+            materialIds[46] = "21d3790cd6f0e5044a4d05b8d6874f25";
+
+            // The inherited colours get re-mapped, but stay separate
+            if (colourIndex == 16) { colourIndex = this.defaultColour; }
+
+            // Get the material
+            string materialId = materialIds[colourIndex];
+            string materialPath = UnityEditor.AssetDatabase.GUIDToAssetPath (materialId);
+            Material material = (Material) UnityEditor.AssetDatabase.LoadAssetAtPath (materialPath, typeof (Material));
+
+            // Store it in the renderer's array
+            materials[index] = material;
+        }
+    }
+    #endregion Mesh processing
 
     #region Line type helpers
     private void ProcessComment (string content) {

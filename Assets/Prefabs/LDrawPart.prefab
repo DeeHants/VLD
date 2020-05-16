@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   filename: 
+  defaultColour: 16
   self: {fileID: 0}
 --- !u!33 &3411657188513732745
 MeshFilter:
@@ -71,57 +72,7 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 509779034e0b8294b83e26e528eba4d2, type: 2}
-  - {fileID: 2100000, guid: f5d58533b3c270f4a8196d6edb036ceb, type: 2}
-  - {fileID: 2100000, guid: 7f0e7f6d5e1eb3943b341eeca971fa6c, type: 2}
-  - {fileID: 2100000, guid: 42c59cb6b1d2bca4a9b9df87553d636d, type: 2}
-  - {fileID: 2100000, guid: d7f9a43fd026900478232a532028a206, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 2100000, guid: 196af0c0dd986974582a57b11d8f993c, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 2100000, guid: 4b19ef2d2cb1e29449226048ef694308, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 2100000, guid: 3b6eac4755aa0ce4e8501cecab0d6688, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 2100000, guid: 21d3790cd6f0e5044a4d05b8d6874f25, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  m_Materials: []
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
