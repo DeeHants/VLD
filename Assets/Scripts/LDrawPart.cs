@@ -188,6 +188,8 @@ public class LDrawPart : MonoBehaviour {
             materialIds[4] = "d7f9a43fd026900478232a532028a206";
             materialIds[7] = "196af0c0dd986974582a57b11d8f993c";
             materialIds[14] = "54ecd5e05fce25e41969f9940f35ffde";
+            materialIds[16] = "32fff524f27641b4095843e711815dda";
+            materialIds[24] = "3afdc0f39f6a0fc42a063c3b67b1c328";
             materialIds[36] = "4b19ef2d2cb1e29449226048ef694308";
             materialIds[39] = "3b6eac4755aa0ce4e8501cecab0d6688";
             materialIds[46] = "21d3790cd6f0e5044a4d05b8d6874f25";
